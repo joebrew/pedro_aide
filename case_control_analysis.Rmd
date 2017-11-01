@@ -6,11 +6,14 @@ output:
   html_document:
     theme: united
     highlight: tango
+    toc: True
+    toc_float: true
 ---
 
 
 ```{r setup, include=FALSE}
 # Basic knitr options
+library(knitr)
 opts_chunk$set(comment = NA, 
                echo = TRUE, 
                warning = FALSE, 
