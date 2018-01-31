@@ -68,13 +68,21 @@ get_or <- function(var = 'locality'){
   return(out)
 }
 
-# Define function for make plot
-make_plot <- function(ors, number = 1){
-  data_name <- paste0('data', number)
-  assign(data_name,
-         ors,
+# Define variables
+variables <- names(dm)
+variables <- variables[!variables %in% c('case_def', 'X1', 'phone', 'family_id', 'perm_id', 'vis_date', 'dob', 'episodes_of_malaria')]
+
+
+# Define function for making data
+make_data <- function(number){
+  assign(paste0('data', number),
+         get_or(variables[number]),
          envir = .GlobalEnv)
-  g <- ggplot(data = get(data_name),
+}
+
+# Define function for make plot
+make_plot <- function(data){
+  g <- ggplot(data = data,
               aes(x = variable,
                   y = or,
                   ymax = upr,
@@ -89,9 +97,9 @@ make_plot <- function(ors, number = 1){
   return(g)
 }
 
-# Define variables
-variables <- names(dm)
-variables <- variables[!variables %in% c('case_def', 'X1', 'phone', 'family_id', 'perm_id', 'vis_date', 'dob', 'episodes_of_malaria')]
+for(i in 1:length(variables)){
+  make_data(number = i)
+}
 
 # Loop through
 table_list <- list()
@@ -100,10 +108,10 @@ plot_list <- list()
 for (i in 1:length(variables)){
   this_variable <- variables[i]
   message(this_variable, ' :', i)
-  result <- get_or(this_variable)
+  result <- get(paste0('data', i))
   titles[i] <- paste0('\n## ', this_variable)
   table_list[[i]] <- DT::datatable(result)
-  plot_list[[i]] <- make_plot(result, number = i)
+  plot_list[[i]] <- make_plot(data = eval(parse(text = paste0('data', i))))
 }
 ```
 
@@ -116,7 +124,7 @@ chunks <- paste0(titles,
                         ifelse(headers, '', 1:length(table_list)),
                         ifelse(headers, '', ']]\n```')), 
                  "\n\n```{r}\n",
-                 'plot_list[[i]]',
+                 'plot_list[[', 1:length(variables), ']]',
                  '\n```\n\n')
 
 # Write our order / child-calls to a doc
