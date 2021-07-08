@@ -1,29 +1,30 @@
 ##########################################################################################################
 #################################Tese de Mestrado da Custodia Paulo#######################################
 #Criado por: Mussagy Mahomed, Instituto Nacional de Saude
-#Tema:       Avaliação de factores de risco associados a ocorrência de episódios múltiplos de malária clínica 
-#            em crianças dos 6 meses a  9  anos residentes na área de vigilância de morbilidade do Distrito 
-#            de Manhiça,  Agosto a dezembro de 2011
+#Tema:       Avalia??o de factores de risco associados a ocorr?ncia de epis?dios m?ltiplos de mal?ria cl?nica 
+#            em crian?as dos 6 meses a  9  anos residentes na ?rea de vigil?ncia de morbilidade do Distrito 
+#            de Manhi?a,  Agosto a dezembro de 2011
 #Dados:      CISM Junho-Dezembro de 2011
 #Datasets:   merged_data_sec.csv;master_file_cleaned_final_2.csv e master_file_cleaned_final_3.csv
 #Supervisor: Prof. Pedro Aide
 #Inicio:     Outubro de 2017
-#Revisão: 
+#Revis?o: 
 #email:      mmahomed@hotmail.com
 #Fim:
 ##########################################################################################################
-######################################Importação de dados ################################################
+######################################Importa??o de dados ################################################
 library(readr)
-merged_data_sec <- read_csv("C:/Users/INS2015/Downloads/Custodia Paulo/Base_de_dados/merged_data_sec.csv")
+library(epitools)
+merged_data_sec <- read_csv("merged_data_sec.csv")
 dt=merged_data_sec
 str(dt)
 library(readr)
-merged_df <- read_csv("C:/Users/INS2015/Downloads/Custodia Paulo/Base_de_dados_revista/master_file_cleaned_final_3.csv")
+merged_df <- read_csv("master_file_cleaned_final_3.csv")
 dm=merged_df
 #master_custodia_merged <- read_excel("C:/Users/INS2015/Downloads/Custodia Paulo/Base_de_dados_revista/master_custodia_merged.xlsx")
 #df=master_custodia_merged
 str(dm)
-###################################codificação de variaveis###############################################
+###################################codifica??o de variaveis###############################################
 tab1 <- function(x = NA, miss = T, desc = F) {
   data.frame(t <- table(x, useNA = ifelse(miss, "always", "no")), 
              perc = tx <- as.numeric(100*prop.table(t)),
@@ -55,7 +56,7 @@ tab1(dm$agecat)
 #tab1(dm$peop24hcat)
 tab1(dm$`nr pregn_slept24h`)
 
-####Quantas crianças menores de 5 anos dormiram neste agregado ontem?
+####Quantas crian?as menores de 5 anos dormiram neste agregado ontem?
 ## child_sleeping: 0 - "0"; 1 - "1"; 2 - "2"; 3 - "3"; 4 - "4"; 5 - "5"
 #dm$chisleep <- ifelse(dm$child_sleeping < 0, 0, NA)
 #dm$chisleep <- (dm=dm[which (dm$child_sleeping<6),])
@@ -203,9 +204,9 @@ tab1(dm$epimal, miss = F)
 tab1(dm$chd_gender, miss = F)
 
 
-#######Caracterizar  os factores socio-demográficos associados a múltiplos episódios de malária########### 
-#######em crianças dos 6 meses a 9 anos de idade                                               
-###Sexo: sexo da criança (1=Masculino; 2= Feminino)
+#######Caracterizar  os factores socio-demogr?ficos associados a m?ltiplos epis?dios de mal?ria########### 
+#######em crian?as dos 6 meses a 9 anos de idade                                               
+###Sexo: sexo da crian?a (1=Masculino; 2= Feminino)
 table(dm$chd_gender, dm$epimal)
 addmargins(table(dm$chd_gender, dm$epimal))
 addmargins(prop.table((tbsex<-with(dm, table(chd_gender,epimal))),margin=2))
@@ -234,7 +235,7 @@ tapply(dm$age_years, dm$epimal,sd)
 tapply(dm$age_years, dm$epimal,median)
 tapply(dm$age_years, dm$epimal,summary)
 tapply(dm$age_years, dm$epimal,quantile)
-###Categoria de idade da criança: 0 - "< 1"; 1 - "1 - 4"; 2 - "5 - 9"
+###Categoria de idade da crian?a: 0 - "< 1"; 1 - "1 - 4"; 2 - "5 - 9"
 table(dm$agecat, dm$epimal)
 addmargins(table(dm$agecat, dm$epimal))
 addmargins(prop.table((tbcat<-with(dm, table(agecat,epimal))),margin=2))
@@ -303,7 +304,7 @@ epitab(dm$head_educ, dm$epimal, pvalue = "chi2")
 round(epitab(dm$head_educ, dm$epimal, pvalue = "chi2")$tab,4)
 round(epitab(dm$head_educ, dm$epimal, oddsratio = "fisher", pvalue="fisher.exact")$tab, 4)
 
-#head_ocup=Ocupação do chefe do agregado
+#head_ocup=Ocupa??o do chefe do agregado
 tbocup<-with(dm, table(head_ocup, epimal))
 tbocup
 prop.table((tbocup),margin=2)
@@ -489,7 +490,7 @@ round(epitab(dm$t_const, dm$epimal, oddsratio = "fisher", pvalue="fisher.exact")
 
 epitab(relevel(as.factor(dm$t_const), ref =2), dm$epimal, pvalue = "chi2")
 
-#kitchen=tem cozinha no agregado (1=Sim, 2=Não)
+#kitchen=tem cozinha no agregado (1=Sim, 2=N?o)
 tbkt<-with(dm, table(kitchen, epimal))
 tbkt
 prop.table((tbkt),margin=2)
@@ -723,7 +724,7 @@ round(epitab(dm$`nr people slept_24hrs`, dm$epimal, pvalue = "chi2")$tab,4)
 round(epitab(dm$`nr people slept_24hrs`, dm$epimal, oddsratio = "fisher", pvalue="fisher.exact")$tab, 4)
 
 
-###Quantas crianças menores de 5 anos dormiram neste agregado ontem?
+###Quantas crian?as menores de 5 anos dormiram neste agregado ontem?
 tab1(dm$`under5 slept_24hrs`)
 prop.table(tbunder<-with(dm, table(`under5 slept_24hrs`, case_def)),margin=2)
 tbunder
@@ -747,7 +748,7 @@ epitab(dm$`under5 slept_24hrs`, dm$epimal, pvalue = "chi2")
 round(epitab(dm$`under5 slept_24hrs`, dm$epimal, pvalue = "chi2")$tab,4)
 round(epitab(dm$`under5 slept_24hrs`, dm$epimal, oddsratio = "fisher", pvalue="fisher.exact")$tab, 4)
 
-####Quantas mulheres grávidas dormiram neste agregado ontem?
+####Quantas mulheres gr?vidas dormiram neste agregado ontem?
 tab1(dm$`nr pregn_slept24h`)
 prop.table(tbpreg<-with(dm, table(`nr pregn_slept24h`, case_def)),margin=2)
 tbpreg
@@ -772,7 +773,7 @@ round(epitab(dm$`nr pregn_slept24h`, dm$epimal, pvalue = "chi2")$tab,4)
 round(epitab(dm$`nr pregn_slept24h`, dm$epimal, oddsratio = "fisher", pvalue="fisher.exact")$tab, 4)
 
 ########Mecanismos de prevencao adotadas no agregado familiar
-####h_fumig=house_irs_12mont: A casa foi fumigada durante os últimos 12 meses? (1=Sim, 2=Não, 3=Não sabe)
+####h_fumig=house_irs_12mont: A casa foi fumigada durante os ?ltimos 12 meses? (1=Sim, 2=N?o, 3=N?o sabe)
 tab1(dm$house_irs_12mont)
 prop.table(tbhou<-with(dm, table(house_irs_12mont,epimal)),margin=2)
 tbhou
@@ -798,7 +799,7 @@ round(epitab(dm$house_irs_12mont, dm$epimal, oddsratio = "fisher", pvalue="fishe
 
 epitab(relevel(as.factor(dm$house_irs_12mont), ref =1), dm$epimal, pvalue = "chi2")
 
-###Dormiu numa rede ontem? (0=não usou rede; 1=rede não impregnada, 2=rede impregnada, 3=não sabe)
+###Dormiu numa rede ontem? (0=n?o usou rede; 1=rede n?o impregnada, 2=rede impregnada, 3=n?o sabe)
 tab1(dm$slept_net)
 tab1(dm$slept_net, miss = F)
 prop.table(tbbdr<-with(dm, table(slept_net, epimal)),margin=2)
@@ -825,7 +826,7 @@ round(epitab(dm$slept_net, dm$epimal, oddsratio = "fisher", pvalue="fisher.exact
 
 epitab(relevel(as.factor(dm$slept_net), ref =2), dm$epimal, pvalue = "chi2")
 
-###razao d nao fumigacao (1= Equipa não veio, 2=não estavam em casa, 3=não sabe, 4=outros, 99=recusaram)
+###razao d nao fumigacao (1= Equipa n?o veio, 2=n?o estavam em casa, 3=n?o sabe, 4=outros, 99=recusaram)
 tab1(dm$reason_no_fum)
 prop.table(tbreas<-with(dm, table(reason_no_fum, epimal)),margin=2)
 tbreas

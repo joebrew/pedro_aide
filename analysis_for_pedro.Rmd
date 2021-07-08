@@ -1,0 +1,150 @@
+---
+title: "Analysis for Pedro"
+author: "Joe Brew"
+date: "January 31, 2018"
+output: html_document
+---
+
+```{r, include=FALSE}
+# Basic knitr options
+library(knitr)
+opts_chunk$set(comment = NA, 
+               echo = FALSE, 
+               warning = FALSE, 
+               message = FALSE, 
+               error = TRUE, # Render report, even with errors
+               cache = F)
+options(scipen='999')
+```
+
+```{r setup, include=FALSE, echo = FALSE}
+library(epitools)
+library(readr)
+knit_engines$set(asis = function(options) {
+  if (options$echo && options$eval) knit_child(text = options$code)
+})
+```
+
+```{r}
+merged_data_sec <- read_csv("merged_data_sec.csv")
+dt=merged_data_sec
+merged_df <- read_csv("master_file_cleaned_final_3.csv")
+dm=merged_df
+```
+
+# Objectives
+
+- Identificar factores de risco individuais associados a múltiplos episódios de malária em crianças dos 6 meses a 15 anos de idade.  
+- Caracterizar  os factores socio-demográficos associados a múltiplos episódios de malária em crianças dos 6 meses a 15 anos de idade.  
+- Caracterizar os factores socio-económicos associados a ocorrência de múltiplos episódios de malária em crianças dos 6 meses a  15 anos de idade.  
+
+## Tables
+
+The below tables show the odds of a second case of malaria.
+
+```{r}
+# Function for calculating OR based on variable
+get_or <- function(var = 'locality'){
+  require(tidyverse)
+  formula <- as.formula(paste0('case_def == "mult_epi" ~ `', var, '`'))
+  fit <- glm(formula, 
+             data = dm,
+             family = binomial('logit'))
+  ci <- confint(fit)
+  ci <- exp(ci)
+  ors <- exp(coef(fit))
+  out <- data.frame(ors)
+  out$variable <- row.names(out)
+  out$lwr <- ci[,1]
+  out$upr <- ci[,2]
+  out <- out %>%
+    dplyr::select(variable, ors, lwr, upr) %>%
+    dplyr::rename(or = ors)
+  row.names(out) <- NULL
+  out <- out %>%
+    mutate(or = round(or, digits = 3),
+           lwr = round(lwr, digits = 3),
+           upr = round(upr, digits = 3))
+  return(out)
+}
+
+# Define variables
+variables <- names(dm)
+variables <- variables[!variables %in% c('case_def', 'X1', 'phone', 'family_id', 'perm_id', 'vis_date', 'dob', 'episodes_of_malaria')]
+
+
+# Define function for making data
+make_data <- function(number){
+  assign(paste0('data', number),
+         get_or(variables[number]),
+         envir = .GlobalEnv)
+}
+
+# Define function for make plot
+make_plot <- function(data){
+  g <- ggplot(data = data,
+              aes(x = variable,
+                  y = or,
+                  ymax = upr,
+                  ymin = lwr)) +
+    geom_linerange(alpha = 0.6) +
+    geom_point(alpha = 0.6) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(x = 'Variable',
+         y = 'Odds ratio') +
+    geom_hline(yintercept = 1, lty = 2, color = 'blue', alpha = 0.6)
+  return(g)
+}
+
+for(i in 1:length(variables)){
+  make_data(number = i)
+}
+
+# Loop through
+table_list <- list()
+titles <- c()
+plot_list <- list()
+for (i in 1:length(variables)){
+  this_variable <- variables[i]
+  message(this_variable, ' :', i)
+  result <- get(paste0('data', i))
+  titles[i] <- paste0('\n## ', this_variable)
+  table_list[[i]] <- DT::datatable(result)
+  plot_list[[i]] <- make_plot(data = eval(parse(text = paste0('data', i))))
+}
+```
+
+
+```{r}
+headers <- unlist(lapply(table_list, function(x){length(x)})) == 1
+chunks <- paste0(titles,
+                 "\n\n", 
+                 paste0(ifelse(headers, '', '```{r}\ntable_list[['),
+                        ifelse(headers, '', 1:length(table_list)),
+                        ifelse(headers, '', ']]\n```')), 
+                 "\n\n```{r}\n",
+                 'plot_list[[', 1:length(variables), ']]',
+                 '\n```\n\n')
+
+# Write our order / child-calls to a doc
+file_connection <- file('children.Rmd')
+writeLines(paste0('---\noutput: html_document\n---\n\n', 
+                  chunks), 
+           file_connection)
+close(file_connection)
+```
+
+
+```{r child='children.Rmd', echo = FALSE}
+# Now, we simply include "children.Rmd" to construct our doc
+# (ie, children is the child doc, and each section is a grandchild)
+```
+
+```{r, results='hide'}
+# Having already called the auto-generated children.Rmd, we can delete it
+file.remove('children.Rmd')
+```
+
+
+
